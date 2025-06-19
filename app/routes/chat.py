@@ -4,6 +4,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.models import Chat
 from app.extensions import db
 from app.services.gemini import get_gemini_response
+from app.schemas import chat_send_schema
 
 chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
 
@@ -13,6 +14,12 @@ def send_message():
     current_user_id = get_jwt_identity()
     data = request.get_json()
     
+    # Validar entrada
+    errors = chat_send_schema.validate(data)
+    if errors:
+        return jsonify({"error": errors}), 400
+    
+    # Guardar mensaje del usuario
     user_message = Chat(
         user_id=current_user_id,
         content=data['content'],
@@ -20,8 +27,13 @@ def send_message():
     )
     db.session.add(user_message)
     
-    ai_response = get_gemini_response(data['content'])
+    # Obtener respuesta de Gemini
+    try:
+        ai_response = get_gemini_response(data['content'])
+    except Exception as e:
+        return jsonify({"error": "Error al conectar con Gemini"}), 502
     
+    # Guardar respuesta del asistente
     assistant_message = Chat(
         user_id=current_user_id,
         content=ai_response,
@@ -37,4 +49,4 @@ def send_message():
 def get_history():
     current_user_id = get_jwt_identity()
     chats = Chat.query.filter_by(user_id=current_user_id).order_by(Chat.timestamp.asc()).all()
-    return jsonify([{"role": c.role, "content": c.content} for c in chats]), 200
+    return jsonify([{"role": c.role, "content": c.content, "timestamp": c.timestamp.isoformat()} for c in chats]), 200
