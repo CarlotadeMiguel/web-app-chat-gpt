@@ -1,18 +1,16 @@
 #app/routes/auth.py
-
 from flask import request, jsonify, Blueprint
 from flask_jwt_extended import create_access_token
 from app.models import User
 from app.extensions import db
-from app.schemas import UserSchema
+from app.schemas import user_register_schema, user_login_schema
 
 auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
-user_schema = UserSchema()
 
 @auth_bp.route('/register', methods=['POST'])
 def register():
     data = request.get_json()
-    errors = user_schema.validate(data)
+    errors = user_register_schema.validate(data)
     if errors:
         return jsonify({"error": errors}), 400
         
@@ -28,10 +26,14 @@ def register():
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
+    errors = user_login_schema.validate(data)
+    if errors:
+        return jsonify({"error": errors}), 400
+        
     user = User.query.filter_by(email=data['email']).first()
     
     if not user or user.password != data['password']:
         return jsonify({"error": "Credenciales inválidas"}), 401
     
     access_token = create_access_token(identity=user.id)
-    return jsonify(access_token=access_token), 200
+    return jsonify({"access_token": access_token}), 200
