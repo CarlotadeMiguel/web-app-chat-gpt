@@ -1,5 +1,6 @@
 #run.py
 from app import create_app
+from app.models import User, Chat
 
 app = create_app()
 
