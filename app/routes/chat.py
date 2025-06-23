@@ -11,7 +11,7 @@ chat_bp = Blueprint('chat', __name__, url_prefix='/chat')
 @chat_bp.route('/send', methods=['POST'])
 @jwt_required()
 def send_message():
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     data = request.get_json()
     
     # Validar entrada
@@ -47,6 +47,6 @@ def send_message():
 @chat_bp.route('/history', methods=['GET'])
 @jwt_required()
 def get_history():
-    current_user_id = get_jwt_identity()
+    current_user_id = int(get_jwt_identity())
     chats = Chat.query.filter_by(user_id=current_user_id).order_by(Chat.timestamp.asc()).all()
     return jsonify([{"role": c.role, "content": c.content, "timestamp": c.timestamp.isoformat()} for c in chats]), 200
