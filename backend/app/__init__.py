@@ -1,9 +1,12 @@
 from flask import Flask, render_template
+from flask_cors import CORS
 from dotenv import load_dotenv
 from .extensions import db, jwt, migrate
 
 def create_app():
     app = Flask(__name__, template_folder='../templates', static_folder='../static')
+    # Permitir todos los orígenes en todas las rutas:
+    CORS(app, origins=['http://localhost:3000'])
     load_dotenv()
     
     app.config.from_object('app.config.Config')
