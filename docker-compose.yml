@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: webapp-backend
+    env_file:
+      - ./backend/.env
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis                   
+    networks:
+      - webapp-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: webapp-frontend
+    ports:
+      - "3000:80"               
+    depends_on:
+      - backend
+    networks:
+      - webapp-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: webapp-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - webapp-network
+
+networks:
+  webapp-network:
+    driver: bridge
