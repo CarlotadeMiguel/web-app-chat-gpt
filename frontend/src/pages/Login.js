@@ -19,8 +19,8 @@ function Login() {
           return alert('La contraseña debe tener al menos 8 caracteres');
         }
         await apiRegister({ email, password });
-        alert('Usuario creado');
-        setMode('login');
+        const loginRes = await apiLogin({ email, password });
+        login(loginRes.data.access_token);
       }
     } catch (e) {
       console.error(e.response?.data);
